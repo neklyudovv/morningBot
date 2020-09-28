@@ -4,7 +4,8 @@ import datetime
 import requests
 from threading import Thread
 
-TOKEN = 'your token'
+TOKEN = 'token'
+USERS = []
 time = '6:30'
 city = 'Москва'
 bot = telebot.TeleBot(TOKEN)
@@ -30,11 +31,21 @@ def check_time(chat_id):
 
 @bot.message_handler(commands=['start'])
 def start(message):
-	second_part = f'\nКаждый день в {time} я буду сообщать тебе о последних новостях, погоде на улице и другую полезную информацию'
-	bot.send_message(message.chat.id, ("Привет, {0.first_name}!" + second_part).format(message.from_user, bot.get_me()), parse_mode='html')
-	thread = Thread(target=check_time, args=([message.chat.id]))
-	thread.start()
-	print('Бот активирован пользователем {0.first_name}')
+	if message.chat.id not in USERS: # если пользователь не активировал бота
+		USERS.append(message.chat.id)
+		second_part = f'\nКаждый день в {time} я буду сообщать тебе о последних новостях, погоде на улице и другую полезную информацию'
+		bot.send_message(message.chat.id, ("Привет, {0.first_name}!" + second_part).format(message.from_user, bot.get_me()), parse_mode='html')
+		#print('Бот активирован пользователем {0.first_name}'.format(message.from_user, bot.get_me())) # хоть какое-то подобие логирования в консоль
+		thread = Thread(target=check_time, args=([USERS])) # создаем поток
+		if not thread.is_alive():	#если поток еще не запущен
+			thread.start()
+			print(USERS)
+		else: # если он уже был запущен
+			thread.stopped = True
+			thread.start()
+			print(USERS)
+	else:
+		bot.send_message(message.chat.id, (("Да активировал ты уже его, успокойся").format(message.from_user, bot.get_me())))
 
 if __name__ == '__main__':
-	bot.polling(none_stop=True)
+	bot.polling(none_stop=True) 
