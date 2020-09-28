@@ -5,29 +5,40 @@ import requests
 from threading import Thread
 
 TOKEN = 'token'
+bot = telebot.TeleBot(TOKEN)
 USERS = []
 time = '6:30'
 city = 'Москва'
-bot = telebot.TeleBot(TOKEN)
 
-def get_weather(chat_id, city):
+def get_weather(city):
 	response = requests.get(f'http://ru.wttr.in/{city}?0T')
 	state = response.text[40:50].replace(' ','').replace('\n', '') # достаем из строки погоду и убираем пробелы с ентерами
 	degrees = response.text[62:75].replace(' ','').replace('\n', '') # то же самое но с температурой
 	return f'Погода в г. {city} - {state}, {degrees}'
 
 def inform(chat_id):
-	weather = get_weather(chat_id, city)
-	bot.send_message(chat_id, f"Доброе утро! Время - {time}.\n{weather}", parse_mode='html')
+	weather = get_weather(city)
+	if time >= '4:00' and time <= "12:00":
+		first_part = 'Доброе утро!'
+	elif time >= "12:00" and time <= "18:00":
+		first_part = 'Добрый день!'
+	elif time >= "18:00" and time <= "23:00":
+		first_part = 'Добрый вечер!'
+	else:
+		first_part = 'Доброй ночи!'
+	bot.send_message(chat_id, f"{first_part} Время - {time}.\n{weather}", parse_mode='html')
 	print('Сообщение отправлено!')
 
-def check_time(chat_id):
+def check_time(USERS):
 	while True:
 		hours = int(datetime.datetime.utcnow().strftime('%H')) + 3
 		now = datetime.datetime.utcnow().strftime(f'{hours}:%M')
 		if now == time:
-			inform(chat_id)
+			for user in USERS:
+				inform(user)
 		timelib.sleep(60)
+
+thread = Thread(target=check_time, args=([USERS])) # создаем поток
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -36,14 +47,8 @@ def start(message):
 		second_part = f'\nКаждый день в {time} я буду сообщать тебе о последних новостях, погоде на улице и другую полезную информацию'
 		bot.send_message(message.chat.id, ("Привет, {0.first_name}!" + second_part).format(message.from_user, bot.get_me()), parse_mode='html')
 		#print('Бот активирован пользователем {0.first_name}'.format(message.from_user, bot.get_me())) # хоть какое-то подобие логирования в консоль
-		thread = Thread(target=check_time, args=([USERS])) # создаем поток
-		if not thread.is_alive():	#если поток еще не запущен
+		if not thread.is_alive():
 			thread.start()
-			print(USERS)
-		else: # если он уже был запущен
-			thread.stopped = True
-			thread.start()
-			print(USERS)
 	else:
 		bot.send_message(message.chat.id, (("Да активировал ты уже его, успокойся").format(message.from_user, bot.get_me())))
 
