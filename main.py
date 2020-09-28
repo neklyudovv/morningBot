@@ -3,12 +3,20 @@ import time as timelib
 import datetime
 import requests
 from threading import Thread
+from lxml import html
 
 TOKEN = 'token'
 bot = telebot.TeleBot(TOKEN)
 USERS = []
 time = '6:30'
 city = 'Москва'
+
+def get_currency():
+	response = requests.get('https://yandex.ru')
+	body = html.fromstring(response.text)
+	dollar = body.xpath('//span[@class="inline-stocks__value_inner"]/text()')[0]
+	euro = body.xpath('//span[@class="inline-stocks__value_inner"]/text()')[1]
+	return f'Курсы валют: 1 EUR = {euro} RUB; 1 USD = {dollar} RUB.'
 
 def get_weather(city):
 	response = requests.get(f'http://ru.wttr.in/{city}?0T')
@@ -18,6 +26,7 @@ def get_weather(city):
 
 def inform(chat_id):
 	weather = get_weather(city)
+	currency = get_currency()
 	if time >= '4:00' and time <= "12:00":
 		first_part = 'Доброе утро!'
 	elif time >= "12:00" and time <= "18:00":
@@ -26,7 +35,7 @@ def inform(chat_id):
 		first_part = 'Добрый вечер!'
 	else:
 		first_part = 'Доброй ночи!'
-	bot.send_message(chat_id, f"{first_part} Время - {time}.\n{weather}", parse_mode='html')
+	bot.send_message(chat_id, f"{first_part} Время - {time}.\n{weather}\n{currency}", parse_mode='html')
 	print('Сообщение отправлено!')
 
 def check_time(USERS):
@@ -39,7 +48,7 @@ def check_time(USERS):
 		timelib.sleep(60)
 
 thread = Thread(target=check_time, args=([USERS])) # создаем поток
-
+get_currency()
 @bot.message_handler(commands=['start'])
 def start(message):
 	if message.chat.id not in USERS: # если пользователь не активировал бота
