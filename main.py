@@ -8,7 +8,7 @@ from lxml import html
 TOKEN = 'token'
 bot = telebot.TeleBot(TOKEN)
 USERS = []
-time = '6:30'
+time = '23:22'
 city = 'Москва'
 
 def get_currency():
@@ -19,9 +19,13 @@ def get_currency():
 	return f'Курсы валют: 1 EUR = {euro} RUB; 1 USD = {dollar} RUB.'
 
 def get_weather(city):
-	response = requests.get(f'http://ru.wttr.in/{city}?0T')
+	url = f'http://wttr.in/{city}?0T'
+	request_headers = {
+    	'Accept-Language' : 'ru'
+	}
+	response = requests.get(url, headers=request_headers)
 	state = response.text[40:50].replace(' ','').replace('\n', '') # достаем из строки погоду и убираем пробелы с ентерами
-	degrees = response.text[62:75].replace(' ','').replace('\n', '') # то же самое но с температурой
+	degrees = response.text[58:75].replace(' ','').replace('\n', '') # то же самое но с температурой
 	return f'Погода в г. {city} - {state}, {degrees}'
 
 def inform(chat_id):
@@ -48,18 +52,28 @@ def check_time(USERS):
 		timelib.sleep(60)
 
 thread = Thread(target=check_time, args=([USERS])) # создаем поток
-get_currency()
+
 @bot.message_handler(commands=['start'])
 def start(message):
 	if message.chat.id not in USERS: # если пользователь не активировал бота
 		USERS.append(message.chat.id)
 		second_part = f'\nКаждый день в {time} я буду сообщать тебе о последних новостях, погоде на улице и другую полезную информацию'
 		bot.send_message(message.chat.id, ("Привет, {0.first_name}!" + second_part).format(message.from_user, bot.get_me()), parse_mode='html')
-		#print('Бот активирован пользователем {0.first_name}'.format(message.from_user, bot.get_me())) # хоть какое-то подобие логирования в консоль
+		print('Бот активирован пользователем {0.first_name}'.format(message.from_user, bot.get_me())) # хоть какое-то подобие логирования в консоль
 		if not thread.is_alive():
 			thread.start()
 	else:
 		bot.send_message(message.chat.id, (("Да активировал ты уже его, успокойся").format(message.from_user, bot.get_me())))
+
+@bot.message_handler(commands=['city'])
+def slashcity(message):
+	global city
+	if message.text == '/city':
+		bot.send_message(message.chat.id, f'Текущий город - {city}', parse_mode='html')
+	else:
+		local_city = message.text.replace('/city', '').replace(' ', '')
+		city = local_city
+		bot.send_message(message.chat.id, f'Вы успешно изменили город на {local_city}', parse_mode='html')
 
 if __name__ == '__main__':
 	bot.polling(none_stop=True) 
