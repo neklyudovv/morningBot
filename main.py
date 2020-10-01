@@ -7,9 +7,8 @@ from lxml import html
 
 TOKEN = 'token'
 bot = telebot.TeleBot(TOKEN)
-USERS = []
-time = '23:22'
-city = 'Москва'
+USERS = {}
+time = '23:44'
 
 def get_currency():
 	response = requests.get('https://yandex.ru')
@@ -29,7 +28,7 @@ def get_weather(city):
 	return f'Погода в г. {city} - {state}, {degrees}'
 
 def inform(chat_id):
-	weather = get_weather(city)
+	weather = get_weather(USERS[chat_id])
 	currency = get_currency()
 	if time >= '4:00' and time <= "12:00":
 		first_part = 'Доброе утро!'
@@ -56,7 +55,7 @@ thread = Thread(target=check_time, args=([USERS])) # создаем поток
 @bot.message_handler(commands=['start'])
 def start(message):
 	if message.chat.id not in USERS: # если пользователь не активировал бота
-		USERS.append(message.chat.id)
+		USERS[message.chat.id] = 'Москва'
 		second_part = f'\nКаждый день в {time} я буду сообщать тебе о последних новостях, погоде на улице и другую полезную информацию'
 		bot.send_message(message.chat.id, ("Привет, {0.first_name}!" + second_part).format(message.from_user, bot.get_me()), parse_mode='html')
 		print('Бот активирован пользователем {0.first_name}'.format(message.from_user, bot.get_me())) # хоть какое-то подобие логирования в консоль
@@ -67,12 +66,12 @@ def start(message):
 
 @bot.message_handler(commands=['city'])
 def slashcity(message):
-	global city
+	global USERS
 	if message.text == '/city':
-		bot.send_message(message.chat.id, f'Текущий город - {city}', parse_mode='html')
+		bot.send_message(message.chat.id, f'Текущий город - {USERS[message.chat.id]}', parse_mode='html')
 	else:
 		local_city = message.text.replace('/city', '').replace(' ', '')
-		city = local_city
+		USERS[message.chat.id] = local_city
 		bot.send_message(message.chat.id, f'Вы успешно изменили город на {local_city}', parse_mode='html')
 
 if __name__ == '__main__':
