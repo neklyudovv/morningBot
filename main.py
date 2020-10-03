@@ -72,9 +72,16 @@ def slashcity(message):
 		bot.send_message(message.chat.id, 'Текущий город - ' + USERS[message.chat.id] + '\nИзменить город: /city {город}', parse_mode='html')
 	else:
 		local_city = message.text.replace('/city', '').replace(' ', '')
-		USERS[message.chat.id] = local_city
-		bot.send_message(message.chat.id, f'Вы успешно изменили город на {local_city}', parse_mode='html')
-		print(('{0.first_name} изменил(a) город на ' + local_city).format(message.from_user, bot.get_me()))
+		request_headers = {
+    	'Accept-Language' : 'ru'
+		}
+		response = requests.get(f'http://wttr.in/{local_city}', headers=request_headers)
+		if response.text.count('определить не удалось') == 0:
+			USERS[message.chat.id] = local_city
+			bot.send_message(message.chat.id, f'Вы успешно изменили город на {local_city}', parse_mode='html')
+			print(('{0.first_name} изменил(a) город на ' + local_city).format(message.from_user, bot.get_me()))
+		else:
+			bot.send_message(message.chat.id, f'Некорректный город', parse_mode='html')
 
 @bot.message_handler(commands=['time'])
 def slashtime(message):
