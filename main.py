@@ -20,12 +20,22 @@ def get_currency():
 def get_weather(city):
 	url = f'http://wttr.in/{city}?0T'
 	request_headers = {
-    	'Accept-Language' : 'ru'
+    	'Accept-Language' : 'ru',
+    	'm' : ''
 	}
 	response = requests.get(url, headers=request_headers)
 	state = response.text[40:50].replace(' ','').replace('\n', '') # достаем из строки погоду и убираем пробелы с ентерами
 	degrees = response.text[58:75].replace(' ','').replace('\n', '') # то же самое но с температурой
 	return f'Погода в г. {city} - {state}, {degrees}'
+
+def get_news():
+	response = requests.get('https://yandex.ru')
+	body = html.fromstring(response.text)
+	news = body.xpath('//a[@class="home-link list__item-content list__item-content_with-icon home-link_black_yes"]')
+	result = ''
+	for i in range(0, 5):
+		result += f'- <a href="{news[i].attrib["href"]}">{news[i].text_content()}</a> \n'
+	return f'Пока ты спал:\n{result}'
 
 def inform(chat_id, time):
 	weather = get_weather(USERS[chat_id])
@@ -38,13 +48,16 @@ def inform(chat_id, time):
 		first_part = 'Добрый вечер!'
 	else:
 		first_part = 'Доброй ночи!'
-	bot.send_message(chat_id, f"{first_part} Время - {time}.\n{weather}\n{currency}", parse_mode='html')
+	bot.send_message(chat_id, f"{first_part} Время - {time}.\n\n{weather}\n\n{currency}\n\n{get_news()}", parse_mode='html')
 	print('Сообщение отправлено!')
 
 def check_time(USERS):
 	while True:
 		hours = int(datetime.datetime.utcnow().strftime('%H')) + 3
 		now = datetime.datetime.utcnow().strftime(f'{hours}:%M')
+		if int(now[0:2]) >= 24:
+			now == str(int(now[0:2]) - 24) + now[2:5]
+			print(now)
 		for user in USERS:
 			if now == TIME[user]:
 				inform(user, TIME[user])
