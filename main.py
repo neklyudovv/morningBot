@@ -15,7 +15,7 @@ def get_currency():
 	body = html.fromstring(response.text)
 	dollar = body.xpath('//span[@class="inline-stocks__value_inner"]/text()')[0]
 	euro = body.xpath('//span[@class="inline-stocks__value_inner"]/text()')[1]
-	return f'Курсы валют: 1 EUR = {euro} RUB; 1 USD = {dollar} RUB.'
+	return f'💵 Курсы валют:\n\n 💰1 EUR = {euro} RUB\n 💰1 USD = {dollar} RUB.'
 
 def get_weather(city):
 	url = f'http://wttr.in/{city}?0T'
@@ -26,7 +26,7 @@ def get_weather(city):
 	response = requests.get(url, headers=request_headers)
 	state = response.text[40:50].replace(' ','').replace('\n', '') # достаем из строки погоду и убираем пробелы с ентерами
 	degrees = response.text[58:75].replace(' ','').replace('\n', '') # то же самое но с температурой
-	return f'Погода в г. {city} - {state}, {degrees}'
+	return f'🌤 Погода в г. {city} - 🌡 {state},  {degrees}'
 
 def get_news():
 	response = requests.get('https://yandex.ru')
@@ -34,8 +34,8 @@ def get_news():
 	news = body.xpath('//a[@class="home-link list__item-content list__item-content_with-icon home-link_black_yes"]')
 	result = ''
 	for i in range(0, 5):
-		result += f'- <a href="{news[i].attrib["href"]}">{news[i].text_content()}</a> \n'
-	return f'Пока ты спал:\n{result}'
+		result += f'📌 <a href="{news[i].attrib["href"]}">{news[i].text_content()}</a> \n'
+	return f'📰 Пока ты спал:\n{result}'
 
 def inform(chat_id, time):
 	weather = get_weather(USERS[chat_id])
