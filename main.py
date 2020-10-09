@@ -55,9 +55,10 @@ def check_time(USERS):
 	while True:
 		hours = int(datetime.datetime.utcnow().strftime('%H')) + 3
 		now = datetime.datetime.utcnow().strftime(f'{hours}:%M')
-		if int(now[0:2]) >= 24:
-			now == str(int(now[0:2]) - 24) + now[2:5]
-			print(now)
+		if len(now) == 5:
+		    if int(now[0:2]) >= 24:
+			    now == str(int(now[0:2]) - 21) + now[2:5]
+			    print(now)
 		for user in USERS:
 			if now == TIME[user]:
 				inform(user, TIME[user])
@@ -108,4 +109,4 @@ def slashtime(message):
 		print(('{0.first_name} изменил(a) время на ' + new_time).format(message.from_user, bot.get_me()))
 
 if __name__ == '__main__':
-	bot.polling(none_stop=True) 
+	bot.polling(none_stop=True)
