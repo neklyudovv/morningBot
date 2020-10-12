@@ -74,6 +74,7 @@ def start(message):
 		second_part = '\nКаждый день в ' + TIME[message.chat.id] + ' я буду сообщать тебе о последних новостях, погоде на улице и другую полезную информацию\n\nКоманды бота:\n/city {город} - изменить город\n/time {время формата 6:30} - изменить время'
 		bot.send_message(message.chat.id, ("Привет, {0.first_name}!").format(message.from_user, bot.get_me())+second_part, parse_mode='html')
 		print('Бот активирован пользователем {0.first_name}'.format(message.from_user, bot.get_me())) # хоть какое-то подобие логирования в консоль
+		print(message)
 		if not thread.is_alive():
 			thread.start()
 	else:
@@ -104,8 +105,18 @@ def slashtime(message):
 		bot.send_message(message.chat.id, 'Время отправки сообщения: ' + TIME[message.chat.id] + '\nИзменить время: /time {время формата 6:30}', parse_mode='html')
 	else:
 		new_time = message.text.replace('/time', '').replace(' ', '')
-		TIME[message.chat.id] = new_time
-		bot.send_message(message.chat.id, f'Вы успешно изменили время на {new_time}', parse_mode='html')
+		if len(new_time) == 5:
+			if new_time[2] == ':':
+				TIME[message.chat.id] = new_time
+			else:
+				bot.send_message(message.chat.id, f'Некорректное время', parse_mode='html')
+				bot.send_message(message.chat.id, f'Вы успешно изменили время на {new_time}', parse_mode='html')
+		else:
+			if new_time[1] == ':':
+				TIME[message.chat.id] = new_time
+				bot.send_message(message.chat.id, f'Вы успешно изменили время на {new_time}', parse_mode='html')
+			else:
+				bot.send_message(message.chat.id, f'Некорректное время', parse_mode='html')
 		print(('{0.first_name} изменил(a) время на ' + new_time).format(message.from_user, bot.get_me()))
 
 if __name__ == '__main__':
