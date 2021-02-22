@@ -27,7 +27,7 @@ def get_currency():
 
 # Получение данных о погоде
 def get_weather(city):
-	url = f'http://wttr.in/{city}?http://wttr.in/kazan?0&format=j1&lang=ru&m&M'
+	url = f'http://wttr.in/{city}?http://wttr.in/{city}?0&format=j1&lang=ru&m&M'
 	request_headers = {
 		'0' : '',
 		'forman' : 'j1',
