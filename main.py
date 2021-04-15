@@ -4,11 +4,33 @@ import datetime
 import requests
 from threading import Thread
 from lxml import html
+import config
 
-TOKEN = 'token' # токен Телеграм бота 
+
+USERS = config.USERS
+TIME = config.TIME
+TOKEN = '1357643240:AAF6zr2x9a3ZYk6Uujuu6fi3-VknWLjOHq8'
 bot = telebot.TeleBot(TOKEN)
-USERS = {}
-TIME = {}
+print(USERS)
+print(TIME)
+
+# сохранение всех пользователей и всех их данных в файл в удобном формате
+# чтобы их можно было прочитать простым импортом, а не циклами
+def save_users():
+    output_file = open("config.py", "w", encoding='utf-8')
+    final_str = 'USERS = {'
+    for user in USERS:
+        final_str += str(user) + ':"' + str(USERS[user]) + '", '
+    final_str += '}\n'
+    final_str += 'TIME = {'
+    for acc in TIME:
+        final_str += str(acc) + ':"' + str(TIME[acc]) + '", '
+    final_str += '}'
+
+    output_file.write(final_str)
+    output_file.close
+    return None
+
 
 # Курс биткоина
 def get_bitcoin_price():
@@ -68,36 +90,42 @@ def inform(chat_id, time):
 	bot.send_message(chat_id, f"{first_part} Время - {time}.\n\n{weather}\n\n{currency}\n\n{news}", parse_mode='html')
 	print('Сообщение отправлено!')
 
-# Ну чтобы не пропустить оптравку нужно и время проверять
+
 def check_time(USERS):
 	while True:
 		hours = int(datetime.datetime.utcnow().strftime('%H')) + 3
 		now = datetime.datetime.utcnow().strftime(f'{hours}:%M')
 		if len(now) == 5:
 		    if int(now[0:2]) >= 24:
-			    now == str(int(now[0:2]) - 21) + now[2:5]
+			    now = str(int(now[0:2]) - 21) + now[2:5]
+			    print(now)
 		for user in USERS:
 			if now == TIME[user]:
-				inform(user,TIME[user])
+				inform(user, TIME[user])
 		timelib.sleep(60)
 
 thread = Thread(target=check_time, args=([USERS])) # создаем поток
 
-# Обработка запуска бота
+if len(USERS) != 0:
+    if not thread.is_alive():
+        thread.start()
+
+
 @bot.message_handler(commands=['start'])
 def start(message):
 	if message.chat.id not in USERS: # если пользователь не активировал бота
 		USERS[message.chat.id] = 'Москва'
 		TIME[message.chat.id] = '6:30'
+		save_users()
 		second_part = '\nКаждый день в ' + TIME[message.chat.id] + ' я буду сообщать тебе о последних новостях, погоде на улице и другую полезную информацию\n\nКоманды бота:\n/city {город} - изменить город\n/time {время формата 6:30} - изменить время'
 		bot.send_message(message.chat.id, ("Привет, {0.first_name}!").format(message.from_user, bot.get_me())+second_part, parse_mode='html')
-		print('Бот активирован пользователем {0.first_name}'.format(message.from_user, bot.get_me()))
+		print('Бот активирован пользователем {0.first_name}'.format(message.from_user, bot.get_me())) # хоть какое-то подобие логирования в консоль
 		if not thread.is_alive():
 			thread.start()
 	else:
 		bot.send_message(message.chat.id, (("Да активировал ты уже его, успокойся").format(message.from_user, bot.get_me())))
 
-# Обработка изменения города 
+
 @bot.message_handler(commands=['city'])
 def slashcity(message):
 	global USERS
@@ -112,11 +140,12 @@ def slashcity(message):
 		if response.text.count('определить не удалось') == 0:
 			USERS[message.chat.id] = local_city
 			bot.send_message(message.chat.id, f'Вы успешно изменили город на {local_city}', parse_mode='html')
+			save_users()
 			print(('{0.first_name} изменил(a) город на ' + local_city).format(message.from_user, bot.get_me()))
 		else:
 			bot.send_message(message.chat.id, f'Некорректный город', parse_mode='html')
 
-# Обработка изменения времени отправки сообщения
+
 @bot.message_handler(commands=['time'])
 def slashtime(message):
 	global TIME
@@ -128,15 +157,18 @@ def slashtime(message):
 			if new_time[2] == ':':
 				TIME[message.chat.id] = new_time
 				bot.send_message(message.chat.id, f'Вы успешно изменили время на {new_time}', parse_mode='html')
+				save_users()
 			else:
 				bot.send_message(message.chat.id, f'Некорректное время', parse_mode='html')
 		else:
 			if new_time[1] == ':':
 				TIME[message.chat.id] = new_time
 				bot.send_message(message.chat.id, f'Вы успешно изменили время на {new_time}', parse_mode='html')
+				save_users()
 			else:
 				bot.send_message(message.chat.id, f'Некорректное время', parse_mode='html')
 		print(('{0.first_name} изменил(a) время на ' + new_time).format(message.from_user, bot.get_me()))
+
 
 if __name__ == '__main__':
 	bot.polling(none_stop=True)
