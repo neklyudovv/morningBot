@@ -9,7 +9,7 @@ import config
 
 USERS = config.USERS
 TIME = config.TIME
-TOKEN = '1357643240:AAF6zr2x9a3ZYk6Uujuu6fi3-VknWLjOHq8'
+TOKEN = 'token' # прошлый токен к сожалению спалил, пришлось поменять его
 bot = telebot.TeleBot(TOKEN)
 print(USERS)
 print(TIME)
@@ -63,11 +63,12 @@ def get_weather(city):
 	degrees = result['temp_C']
 	return f'🌤 Погода в г. {city} - 🌡 {state},  {degrees} ℃'
 
+
 # Получение пяти первых статей с Яндекса
 def get_news():
 	response = requests.get('https://yandex.ru')
 	body = html.fromstring(response.text)
-	news = body.xpath('//a[@class="home-link list__item-content list__item-content_with-icon home-link_black_yes"]')
+	news = body.xpath('//a[@class="home-link2 news__item list__item-content list__item-content_with-icon home-link2_color_inherit home-link2_hover_red"]')
 	result = ''
 	for i in range(0, 5):
 		result += f'📌 <a href="{news[i].attrib["href"]}">{news[i].text_content()}</a> \n'
@@ -88,6 +89,7 @@ def inform(chat_id, time):
 	else:
 		first_part = 'Доброй ночи!'
 	bot.send_message(chat_id, f"{first_part} Время - {time}.\n\n{weather}\n\n{currency}\n\n{news}", parse_mode='html')
+	#bot.send_message(chat_id, f"{first_part} Время - {time}.\n\n{weather}\n\n{currency}\n\n", parse_mode='html')
 	print('Сообщение отправлено!')
 
 
