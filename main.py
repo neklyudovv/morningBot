@@ -9,7 +9,7 @@ import config
 
 USERS = config.USERS
 TIME = config.TIME
-TOKEN = 'token' # прошлый токен к сожалению спалил, пришлось поменять его
+TOKEN = '' # прошлый токен к сожалению спалил, пришлось поменять его
 bot = telebot.TeleBot(TOKEN)
 print(USERS)
 print(TIME)
