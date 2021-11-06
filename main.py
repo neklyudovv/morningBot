@@ -80,9 +80,9 @@ def inform(chat_id, time):
 	currency = get_currency()
 	news = get_news()
 	now = int(time[0:2].replace(':', ''))
-	if now >= 4 and now <= 12:
+	if now >= 4 and now < 12:
 		first_part = 'Доброе утро!'
-	elif now >= 12 and now <= 18:
+	elif now >= 12 and now < 18:
 		first_part = 'Добрый день!'
 	elif now >= 18 and now <= 23:
 		first_part = 'Добрый вечер!'
